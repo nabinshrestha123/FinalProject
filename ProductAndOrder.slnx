@@ -2,5 +2,6 @@
   <Project Path="Domain/ProductAndOrder.Domain.csproj" />
   <Project Path="ProductAndOrder.Application/ProductAndOrder.Application.csproj" />
   <Project Path="ProductAndOrder.Infrastructure/ProductAndOrder.Infrastructure.csproj" />
+  <Project Path="ProductAndOrder.Tests/ProductAndOrder.Tests.csproj" Id="438dacc7-474d-40f5-a882-724880e579de" />
   <Project Path="ProductAndOrder/ProductAndOrder.Api.csproj" />
 </Solution>

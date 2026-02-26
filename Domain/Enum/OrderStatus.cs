@@ -9,7 +9,9 @@ namespace ProductAndOrder.Domain.Enum
 
 		Approved=1,
 		Rejected=2,
-		Pending=3
+		Pending=3,
+		Completed=4,
+		Canceled=5,
 
 	}
 }
