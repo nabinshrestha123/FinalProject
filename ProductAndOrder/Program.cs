@@ -1,5 +1,8 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using ProductAndOrder.Api.DependencyInjection;
+using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
 using ProductAndOrder.Application.Services;
 using ProductAndOrder.Domain.Interfaces;
@@ -13,6 +16,10 @@ builder.Services.AddDbContext<AppDBContext>(options =>
 		"Host=localhost;Port=5432;Database=NewProject;Username=postgres;Password=koeJ2449k"));
 builder.Services.AddScoped<IProductDto, ProductService>();
 builder.Services.AddScoped<IProduct, ProductRepository>();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductDto>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderDto>();
 
 builder.Services.AddScoped<IOrderDto, OrderService>();
 builder.Services.AddScoped<IOrder, OrderRepository>();
