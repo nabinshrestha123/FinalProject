@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Domain/ProductAndOrder.Domain.csproj" />
+  <Project Path="ProductAndOrder.Application/ProductAndOrder.Application.csproj" />
+  <Project Path="ProductAndOrder.Infrastructure/ProductAndOrder.Infrastructure.csproj" />
+  <Project Path="ProductAndOrder/ProductAndOrder.Api.csproj" />
+</Solution>
