@@ -131,22 +131,7 @@ namespace ProductAndOrder.Tests.Services
 				Times.Once  // ← confirm the save actually happened
 			);
 		}
-//```
 
-//### What happens when this test runs:
-//```
-//Test sends createDto to _service.AddOrderAsync()
-//    → service converts createDto to Order object
-//    → service calls _Order.AddOrderAsync(order)
-//        → mock intercepts this
-//        → mock returns savedOrder(our fake saved data)
-//    → service converts savedOrder to OrderDto
-//    → service returns OrderDto
-//Test checks:
-//    ✅ result is not null
-//    ✅ result.Id == 10
-//    ✅ result.TotalAmount == 300
-//    ✅ AddOrderAsync was called exactly once
 [Fact]
 public async Task UpdateOrderAsync_ShouldReturnTrue_WhenOrderExists()
 {
