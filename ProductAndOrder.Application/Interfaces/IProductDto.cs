@@ -11,8 +11,8 @@ namespace ProductAndOrder.Application.Interfaces
 		Task<IEnumerable<ProductDto>> GetAllProductsAsync();
 		Task<ExecutionResult<ProductDto>> GetProductByIdAsync(int id);
 
-		Task<ProductDto> AddProductAsync(CreateProductDto createproduct);
+		Task<ProductDto> AddProductAsync(CreateProductDto createproduct, int actionby);
 		Task<bool> DeleteProductAsync(int id);
-		Task<bool> UpdateProductAsync(UpdateProductDto updateproduct);
+		Task<bool> UpdateProductAsync(UpdateProductDto updateproduct, int actionby);
 	}
 }

@@ -136,7 +136,7 @@ namespace ProductAndOrder.Tests.Controllers
 			// Tell mock: when AddProductAsync is called with
 			// any CreateProductDto, return addedProduct
 			_mockService
-				.Setup(s => s.AddProductAsync(It.IsAny<CreateProductDto>()))
+				.Setup(s => s.AddProductAsync(It.IsAny<CreateProductDto>(), It.IsAny<int>()))
 				.ReturnsAsync(addedProduct);
 
 			// ACT
@@ -164,7 +164,7 @@ namespace ProductAndOrder.Tests.Controllers
 			// Tell mock: when UpdateProductAsync is called,
 			// return true = pretend that update was successful
 			_mockService
-				.Setup(s => s.UpdateProductAsync(It.IsAny<UpdateProductDto>()))
+				.Setup(s => s.UpdateProductAsync(It.IsAny<UpdateProductDto>(), It.IsAny<int>()))
 				.ReturnsAsync(true);
 
 			// ACT
@@ -182,7 +182,7 @@ namespace ProductAndOrder.Tests.Controllers
 
 			// Tell mock: return false = product not found
 			_mockService
-				.Setup(s => s.UpdateProductAsync(It.IsAny<UpdateProductDto>()))
+				.Setup(s => s.UpdateProductAsync(It.IsAny<UpdateProductDto>(), It.IsAny<int>()))
 				.ReturnsAsync(false);
 
 			// ACT

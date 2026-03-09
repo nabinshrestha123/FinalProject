@@ -116,16 +116,12 @@ namespace ProductAndOrder.Tests.Services
 
 			// ── ASSERT ───────────────────────────────────────────────────
 
-			// Was something returned at all?
+			
 			result.Should().NotBeNull();
 
-			// Did the returned OrderDto have the correct Id from DB?
+			
 			result.Id.Should().Be(10);
-
-			// Did the TotalAmount map correctly?
 			result.TotalAmount.Should().Be(300);
-
-			// Was AddOrderAsync on the repo actually called once?
 			_orderMock.Verify(
 				r => r.AddOrderAsync(It.IsAny<Order>()),
 				Times.Once  // ← confirm the save actually happened

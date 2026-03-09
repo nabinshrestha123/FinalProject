@@ -125,6 +125,7 @@ namespace ProductAndOrder.Tests.Services
 			// ARRANGE
 
 			// This is what the user sends to create a product
+			var actionBy = 1; // Simulate user with Id=1 is adding the product
 			var createDto = new CreateProductDto
 			{
 				ProductName = "Tablet",
@@ -147,7 +148,7 @@ namespace ProductAndOrder.Tests.Services
 		
 
 			// ACT
-			var result = await _service.AddProductAsync(createDto);
+			var result = await _service.AddProductAsync(createDto,actionBy);
 
 			// ASSERT
 			result.Should().NotBeNull();
@@ -201,6 +202,7 @@ namespace ProductAndOrder.Tests.Services
 		public async Task UpdateProductAsync_ShouldReturnTrue_WhenProductExists()
 		{
 			// ARRANGE
+			var actionBy = 1; // Simulate user with Id=1 is updating the product
 
 			// This is the existing product in the fake DB
 			var existingProduct = new Product
@@ -231,7 +233,7 @@ namespace ProductAndOrder.Tests.Services
 		
 
 			// ACT
-			var result = await _service.UpdateProductAsync(updateDto);
+			var result = await _service.UpdateProductAsync(updateDto,actionBy);
 
 			// ASSERT
 			result.Should().BeTrue(); // success
@@ -251,6 +253,7 @@ namespace ProductAndOrder.Tests.Services
 			_mockProduct
 				.Setup(r => r.GetProductByIdAsync(99))
 				.ReturnsAsync((Product?)null);
+			var actionBy = 1; // Simulate user with Id=1 is trying to update a non-existent product
 
 			var updateDto = new UpdateProductDto
 			{
@@ -260,7 +263,7 @@ namespace ProductAndOrder.Tests.Services
 			};
 
 			// ACT
-			var result = await _service.UpdateProductAsync(updateDto);
+			var result = await _service.UpdateProductAsync(updateDto, actionBy);
 
 			// ASSERT
 			result.Should().BeFalse(); // not found = false

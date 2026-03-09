@@ -54,12 +54,14 @@ namespace ProductAndOrder.Application.Services
 			};
 		}
 
-		public async Task<ProductDto> AddProductAsync(CreateProductDto createproduct)
+		public async Task<ProductDto> AddProductAsync(CreateProductDto createproduct,int actionby)
 		{
 			var product = new Product
 			{
 				ProductName = createproduct.ProductName,
-				Price = createproduct.Price
+				Price = createproduct.Price,
+				CreatedBy = actionby,
+				CreatedDate = DateTime.UtcNow
 			};
 			var addedProduct= await _Product.AddProductAsync(product);
 
@@ -82,7 +84,7 @@ namespace ProductAndOrder.Application.Services
 			var dltproduct=await _Product.DeleteProductAsync(productToDelete);
 			return true;
 		}
-		public async Task<bool> UpdateProductAsync(UpdateProductDto updateproduct)
+		public async Task<bool> UpdateProductAsync(UpdateProductDto updateproduct, int actionby)
 		{
            var productToUpdate= await _Product.GetProductByIdAsync(updateproduct.Id);
 			if (productToUpdate == null)
@@ -92,6 +94,9 @@ namespace ProductAndOrder.Application.Services
 			productToUpdate.Id = updateproduct.Id;
 			productToUpdate.ProductName = updateproduct.ProductName;
 			productToUpdate.Price = updateproduct.Price;
+			productToUpdate.UpdatedBy = actionby;
+			productToUpdate.UpdatedDate = DateTime.Now;
+
 
 			var updatedProduct = await _Product.UpdateProductAsync(productToUpdate);
 			return true;
