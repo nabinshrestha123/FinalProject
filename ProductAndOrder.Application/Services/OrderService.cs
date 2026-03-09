@@ -10,9 +10,11 @@ using ProductAndOrder.Domain.Interfaces;
 namespace ProductAndOrder.Application.Services
 {
 	public class OrderService: IOrderDto
-	{    private readonly IOrder _Order;	
-		public OrderService(IOrder order) { 
+	{    private readonly IOrder _Order;
+		private readonly IUserServiceClient _UserServiceClient;
+		public OrderService(IOrder order, IUserServiceClient UserServiceClient) { 
 			_Order = order;
+			_UserServiceClient = UserServiceClient;
 		}
 		public async Task<IEnumerable<OrderDto>> GetAllOrderAsync()
 		{
@@ -37,12 +39,22 @@ namespace ProductAndOrder.Application.Services
 					Message = "OrderId not found",
 					Status = ResponseStatus.BadRequest
 				};
-			var result= new OrderDto
+			var customerDetail = await _UserServiceClient.GetUserAsync(orders.UserId);
+			if (customerDetail == null)
+				return new ExecutionResult<OrderDto>()
+				{
+					Data = null,
+					Message = "Customer not found",
+					Status = ResponseStatus.BadRequest
+				};
+
+			var result = new OrderDto
 			{
 				Id = orders.Id,
 				OrderDate = orders.OrderDate,
 				OrderStatus = (Domain.Enum.OrderStatus)orders.OrderStatus,
 				TotalAmount = orders.TotalAmount,
+				CustomerName = customerDetail.Name
 			};
 			return new ExecutionResult<OrderDto>()
 			{

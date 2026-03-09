@@ -32,9 +32,14 @@ public partial class Program
 		builder.Services.AddValidatorsFromAssemblyContaining<CreateOrderDto>();
 		builder.Services.AddScoped<IOrderDto, OrderService>();
 		builder.Services.AddScoped<IOrder, OrderRepository>();
+		builder.Services.AddScoped<IUserServiceClient, UserServiceClient>();
 		builder.Services.AddControllers();
 		builder.Services.AddApiDI();
 		builder.Services.AddEndpointsApiExplorer();
+		builder.Services.AddHttpClient<UserServiceClient>(client =>
+		{
+			client.BaseAddress = new Uri("http://localhost:5001");
+		});
 
 		// ✅ Swagger with JWT Authorize button
 		builder.Services.AddSwaggerGen(c =>
