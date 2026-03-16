@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Moq;
 using NPOI.SS.Formula.Functions;
 using ProductAndOrder.Application.DTO;
+using ProductAndOrder.Application.Interfaces;
 using ProductAndOrder.Application.Services;
 using ProductAndOrder.Domain.Entities;
 using ProductAndOrder.Domain.Enum;
@@ -16,12 +17,13 @@ namespace ProductAndOrder.Tests.Services
 	public class OrderServiceTest
 	{
 		private readonly Mock<IOrder> _orderMock;
+		private readonly Mock<IUserServiceClient> _userServiceClient;
 		private readonly OrderService _orderService;
 
 		public OrderServiceTest()
 		{
 			_orderMock = new Mock<IOrder>();
-			_orderService = new OrderService(_orderMock.Object);
+			_orderService = new OrderService(_orderMock.Object, _userServiceClient.Object);
 		}
 		[Fact]
 		public async Task GetAllOrderAsync_ShouldReturnAllOrders_WhenOrdersExist()

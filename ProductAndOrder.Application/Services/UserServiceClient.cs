@@ -28,7 +28,7 @@ namespace ProductAndOrder.Application.Services
 
 		public async Task<UserDto> GetUserAsync(int userId)
 		{
-			var response = await _httpClient.GetAsync($"https://localhost:44380/api/HttpUser/GetUser/{userId}");
+			var response = await _httpClient.GetAsync("https://localhost:44380/api/HttpUser/GetUser?userId=" + userId);
 			if (!response.IsSuccessStatusCode)
 				return null;
 

@@ -26,7 +26,7 @@ namespace ProductAndOrder.Api.Controllers
 			return Ok(products);
 		}
 		[HttpGet("{id}")]
-		//[Authorize(Roles = "Admin,Customer")]
+		[Authorize(Roles = "Admin,Customer")]
 		//[Authorize(Roles = "Customer")]
 		public async Task<IActionResult> GetProductByIdAsync(int id)
 		{

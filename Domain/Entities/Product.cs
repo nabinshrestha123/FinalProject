@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ProductAndOrder.Domain.Entities
 {
-public class Product
+public class product
 	{
 		[Key]
 		public int Id { get; set; }

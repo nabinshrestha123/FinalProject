@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ProductAndOrder.Application.DTO;
+﻿using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
+using ProductAndOrder.Application.Kafka.KafkaEntities;
+using ProductAndOrder.Application.Kafka.Producer.ProducerInterface;
+using ProductAndOrder.Application.Kafka.Topic;
 using ProductAndOrder.Domain.Entities;
 using ProductAndOrder.Domain.Enum;
 using ProductAndOrder.Domain.Interfaces;
@@ -10,11 +10,16 @@ using ProductAndOrder.Domain.Interfaces;
 namespace ProductAndOrder.Application.Services
 {
 	public class OrderService: IOrderDto
-	{    private readonly IOrder _Order;
+	{   private readonly IOrder _Order;
 		private readonly IUserServiceClient _UserServiceClient;
-		public OrderService(IOrder order, IUserServiceClient UserServiceClient) { 
+		private readonly IKafkaProducer _KafkaProducr;
+		
+
+		public OrderService(IOrder order, IUserServiceClient UserServiceClient,IKafkaProducer kafkaProducer) { 
 			_Order = order;
 			_UserServiceClient = UserServiceClient;
+			_KafkaProducr = kafkaProducer;
+			
 		}
 		public async Task<IEnumerable<OrderDto>> GetAllOrderAsync()
 		{
@@ -67,13 +72,29 @@ namespace ProductAndOrder.Application.Services
 		public async Task<OrderDto> AddOrderAsync(CreateOrderDto createorder)
 		{
 			var order = new Order
-			{
+			{   
 				UserId = createorder.UserId,
 				OrderDate = createorder.OrderDate,
 				OrderStatus = (int)(OrderStatus)createorder.OrderStatus,
 				TotalAmount = createorder.TotalAmount,
 			};
 			var createdOrder = await _Order.AddOrderAsync(order);
+
+			var orderCreatedEvent = new OrderCreatedEvent
+			{
+				OrderId = createdOrder.Id,
+				status =(OrderStatus)createdOrder.OrderStatus,
+				Message= $"Order with ID {createdOrder.Id} has been created with status {createdOrder.OrderStatus}."
+
+
+			};
+
+			await _KafkaProducr.ProducerAsync(
+				topic: KafkaTopics.OrderCreated,
+				key: order.UserId.ToString(),
+				message: order
+				);
+			
 			return new OrderDto
 			{
 				Id = createdOrder.Id,
@@ -81,6 +102,7 @@ namespace ProductAndOrder.Application.Services
 				OrderStatus = (Domain.Enum.OrderStatus)createdOrder.OrderStatus,
 				TotalAmount = createdOrder.TotalAmount,
 			};	
+
 
 		}
 		public async Task<bool> DeleteOrderAsync(int id)
@@ -102,6 +124,8 @@ namespace ProductAndOrder.Application.Services
 			order.TotalAmount = updateorder.TotalAmount;
 
 			await _Order.UpdateOrderAsync(order);
+			//produce to user ms 
+
 			return true;
 
 

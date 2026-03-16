@@ -7,11 +7,11 @@ namespace ProductAndOrder.Domain.Interfaces
 {
 	public interface IProduct
 	{
-		Task <IEnumerable<Product>> GetAllProductsAsync();
-		Task <Product> GetProductByIdAsync(int id);
+		Task <IEnumerable<product>> GetAllProductsAsync();
+		Task <product> GetProductByIdAsync(int id);
 
-		Task <Product> AddProductAsync(Product product);
-		Task <bool> DeleteProductAsync(Product product);
-		Task<bool> UpdateProductAsync(Product product);
+		Task <product> AddProductAsync(product product);
+		Task <bool> DeleteProductAsync(product product);
+		Task<bool> UpdateProductAsync(product product);
 	}
 }

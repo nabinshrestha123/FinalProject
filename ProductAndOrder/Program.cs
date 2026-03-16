@@ -1,4 +1,5 @@
 using System.Text;
+using Confluent.Kafka;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,16 +10,14 @@ using Microsoft.OpenApi.Models;              // ✅ keep only this
 using ProductAndOrder.Api.DependencyInjection;
 using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
+using ProductAndOrder.Application.Kafka.Producer.ProducerInterface;
+using ProductAndOrder.Application.Kafka.Producer.ProducerService;
 using ProductAndOrder.Application.Services;
 using ProductAndOrder.Domain.Interfaces;
 using ProductAndOrder.Infrastructure.Data;
 using ProductAndOrder.Infrastructure.Repository;
 using Swashbuckle.AspNetCore.SwaggerGen;     // ✅ add this
 
-public partial class Program
-{
-	private static void Main(string[] args)
-	{
 		var builder = WebApplication.CreateBuilder(args);
 
 		builder.Services.AddDbContext<AppDBContext>(options =>
@@ -33,13 +32,21 @@ public partial class Program
 		builder.Services.AddScoped<IOrderDto, OrderService>();
 		builder.Services.AddScoped<IOrder, OrderRepository>();
 		builder.Services.AddScoped<IUserServiceClient, UserServiceClient>();
-		builder.Services.AddControllers();
+        builder.Services.AddScoped<IKafkaProducer, KafkaProducerService>();
+      
+
+builder.Services.AddControllers();
 		builder.Services.AddApiDI();
 		builder.Services.AddEndpointsApiExplorer();
-		builder.Services.AddHttpClient<UserServiceClient>(client =>
+		builder.Services.AddHttpClient<IUserServiceClient, UserServiceClient>((serviceProvider, client) =>
 		{
-			client.BaseAddress = new Uri("http://localhost:5001");
+			var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+
+			var baseUrl = configuration["ServiceUrls:UserService"];
+
+			client.BaseAddress = new Uri(baseUrl);
 		});
+
 
 		// ✅ Swagger with JWT Authorize button
 		builder.Services.AddSwaggerGen(c =>
@@ -88,6 +95,7 @@ public partial class Program
 				};
 			});
 
+
 		var app = builder.Build();
 
 		if (app.Environment.IsDevelopment())
@@ -97,6 +105,9 @@ public partial class Program
 			// ✅ Removed app.MapOpenApi() — was conflicting
 		}
 
+
+
+
 		app.UseHttpsRedirection();
 		app.UseAuthentication();
 		app.UseAuthorization();
@@ -105,5 +116,5 @@ public partial class Program
 		app.MapGet("/", () => "ProductAndOrder API is running successfully...");
 
 		app.Run();
-	}
-}
+	
+	

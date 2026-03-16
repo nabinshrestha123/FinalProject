@@ -56,7 +56,7 @@ namespace ProductAndOrder.Application.Services
 
 		public async Task<ProductDto> AddProductAsync(CreateProductDto createproduct,int actionby)
 		{
-			var product = new Product
+			var product = new product
 			{
 				ProductName = createproduct.ProductName,
 				Price = createproduct.Price,

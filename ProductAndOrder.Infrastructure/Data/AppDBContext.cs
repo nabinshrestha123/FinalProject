@@ -11,7 +11,7 @@ namespace ProductAndOrder.Infrastructure.Data
 		public AppDBContext(DbContextOptions<AppDBContext> options) : base(options)
 		{
 		}
-	    public DbSet<Product> Products { get; set; }
+	    public DbSet<product> Products { get; set; }
 		public DbSet<Order> Orders { get; set; }
 	}
 	}

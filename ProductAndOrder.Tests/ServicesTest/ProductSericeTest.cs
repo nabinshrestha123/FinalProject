@@ -24,10 +24,10 @@ namespace ProductAndOrder.Tests.Services
 		public async Task GetAllProductsAsync_ShouldReturnAllProducts_WhenProductsExist()
 		{
 			//Arrange
-			var fakeProducts = new List<Product>
+			var fakeProducts = new List<product>
 			{
-				new Product { Id = 1, ProductName = "Laptop", Price = 1000 },
-				new Product { Id = 2, ProductName = "Phone",  Price = 500  }
+				new product { Id = 1, ProductName = "Laptop", Price = 1000 },
+				new product { Id = 2, ProductName = "Phone",  Price = 500  }
 			};
 
 			// Tell mock: when GetAllProductsAsync() is called,
@@ -52,7 +52,7 @@ namespace ProductAndOrder.Tests.Services
 			// Tell mock: return an empty list (no products in DB)
 			_mockProduct
 				.Setup(r => r.GetAllProductsAsync())
-				.ReturnsAsync(new List<Product>());
+				.ReturnsAsync(new List<product>());
 
 			// ACT
 			var result = await _service.GetAllProductsAsync();
@@ -69,7 +69,7 @@ namespace ProductAndOrder.Tests.Services
 		{
 			// ARRANGE
 			// This is the fake product our DB will return
-			var fakeProduct = new Product
+			var fakeProduct = new product
 			{
 				Id = 1,
 				ProductName = "Laptop",
@@ -102,7 +102,7 @@ namespace ProductAndOrder.Tests.Services
 			// This simulates "product doesn't exist in database"
 			_mockProduct
 				.Setup(r => r.GetProductByIdAsync(99))
-				.ReturnsAsync((Product?)null);  // ← how to return null from mock
+				.ReturnsAsync((product?)null);  // ← how to return null from mock
 
 			// ACT
 			var result = await _service.GetProductByIdAsync(99);
@@ -134,7 +134,7 @@ namespace ProductAndOrder.Tests.Services
 
 			// This is what the fake DB returns after saving
 			// Notice Id = 5 — database generates the Id
-			var savedProduct = new Product
+			var savedProduct = new product
 			{
 				Id = 5,                  // ← DB generated this
 				ProductName = createDto.ProductName,
@@ -143,7 +143,7 @@ namespace ProductAndOrder.Tests.Services
 
 		
 			_mockProduct
-				.Setup(r => r.AddProductAsync(It.IsAny<Product>()))
+				.Setup(r => r.AddProductAsync(It.IsAny<product>()))
 				.ReturnsAsync(savedProduct);
 		
 
@@ -159,7 +159,7 @@ namespace ProductAndOrder.Tests.Services
 			// Verify the repo was actually called once
 			// (confirms the save actually happened)
 			_mockProduct.Verify(
-				r => r.AddProductAsync(It.IsAny<Product>()),
+				r => r.AddProductAsync(It.IsAny<product>()),
 				Times.Once
 			);
 		}
@@ -177,7 +177,7 @@ namespace ProductAndOrder.Tests.Services
 			// Tell mock: return null = product doesn't exist
 			_mockProduct
 				.Setup(r => r.GetProductByIdAsync(99))
-				.ReturnsAsync((Product?)null);
+				.ReturnsAsync((product?)null);
 
 			// ACT
 			var result = await _service.DeleteProductAsync(99);
@@ -189,7 +189,7 @@ namespace ProductAndOrder.Tests.Services
 			// Verify delete was NEVER called
 			// because product didn't exist, we must not try to delete
 			_mockProduct.Verify(
-				r => r.DeleteProductAsync(It.IsAny<Product>()),
+				r => r.DeleteProductAsync(It.IsAny<product>()),
 				Times.Never
 			);
 		}
@@ -205,7 +205,7 @@ namespace ProductAndOrder.Tests.Services
 			var actionBy = 1; // Simulate user with Id=1 is updating the product
 
 			// This is the existing product in the fake DB
-			var existingProduct = new Product
+			var existingProduct = new product
 			{
 				Id = 1,
 				ProductName = "Old Laptop",  // old name
@@ -228,7 +228,7 @@ namespace ProductAndOrder.Tests.Services
 			// Tell mock: when UpdateProductAsync is called,
 			// return the updated product
 			_mockProduct
-				.Setup(r => r.UpdateProductAsync(It.IsAny<Product>()))
+				.Setup(r => r.UpdateProductAsync(It.IsAny<product>()))
 				.ReturnsAsync(true);
 		
 
@@ -240,7 +240,7 @@ namespace ProductAndOrder.Tests.Services
 
 			// Verify update was actually called once
 			_mockProduct.Verify(
-				r => r.UpdateProductAsync(It.IsAny<Product>()),
+				r => r.UpdateProductAsync(It.IsAny<product>()),
 				Times.Once
 			);
 		}
@@ -252,7 +252,7 @@ namespace ProductAndOrder.Tests.Services
 			// Tell mock: return null = product doesn't exist
 			_mockProduct
 				.Setup(r => r.GetProductByIdAsync(99))
-				.ReturnsAsync((Product?)null);
+				.ReturnsAsync((product?)null);
 			var actionBy = 1; // Simulate user with Id=1 is trying to update a non-existent product
 
 			var updateDto = new UpdateProductDto
@@ -271,7 +271,7 @@ namespace ProductAndOrder.Tests.Services
 			// Verify update was NEVER called
 			// because product didn't exist
 			_mockProduct.Verify(
-				r => r.UpdateProductAsync(It.IsAny<Product>()),
+				r => r.UpdateProductAsync(It.IsAny<product>()),
 				Times.Never
 			);
 		}
