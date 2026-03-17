@@ -82,17 +82,15 @@ namespace ProductAndOrder.Application.Services
 
 			var orderCreatedEvent = new OrderCreatedEvent
 			{
-				OrderId = createdOrder.Id,
-				status =(OrderStatus)createdOrder.OrderStatus,
-				Message= $"Order with ID {createdOrder.Id} has been created with status {createdOrder.OrderStatus}."
-
+				Message= $"Order with ID {createdOrder.Id} has been created with status {createdOrder.OrderStatus}.",
+				UserId = createorder.UserId
 
 			};
 
 			await _KafkaProducr.ProducerAsync(
 				topic: KafkaTopics.OrderCreated,
 				key: order.UserId.ToString(),
-				message: order
+				message: orderCreatedEvent
 				);
 			
 			return new OrderDto
