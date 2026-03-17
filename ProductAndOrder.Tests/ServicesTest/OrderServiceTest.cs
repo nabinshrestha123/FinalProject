@@ -7,6 +7,7 @@ using Moq;
 using NPOI.SS.Formula.Functions;
 using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
+using ProductAndOrder.Application.Kafka.Producer.ProducerService;
 using ProductAndOrder.Application.Services;
 using ProductAndOrder.Domain.Entities;
 using ProductAndOrder.Domain.Enum;
@@ -19,11 +20,11 @@ namespace ProductAndOrder.Tests.Services
 		private readonly Mock<IOrder> _orderMock;
 		private readonly Mock<IUserServiceClient> _userServiceClient;
 		private readonly OrderService _orderService;
-
+		private readonly KafkaProducerService _producerService;
 		public OrderServiceTest()
 		{
 			_orderMock = new Mock<IOrder>();
-			_orderService = new OrderService(_orderMock.Object, _userServiceClient.Object);
+			_orderService = new OrderService(_orderMock.Object, _userServiceClient.Object,_producerService);
 		}
 		[Fact]
 		public async Task GetAllOrderAsync_ShouldReturnAllOrders_WhenOrdersExist()

@@ -28,7 +28,13 @@ public class KafkaProducerService : IKafkaProducer, IDisposable
 				Acks = Acks.All,
 				EnableIdempotence = true,
 				MessageSendMaxRetries = 3,
-				RetryBackoffMs = 1000
+				RetryBackoffMs = 1000,
+
+
+				SecurityProtocol = SecurityProtocol.SaslSsl,
+				SaslMechanism = SaslMechanism.Plain,
+				SaslUsername = config["Kafka:ApiKey"],
+				SaslPassword = config["Kafka:ApiSecret"]
 			};
 			_producer = new ProducerBuilder<string, string>(producerConfig).Build();
 
