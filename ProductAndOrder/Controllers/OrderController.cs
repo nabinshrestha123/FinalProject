@@ -8,7 +8,7 @@ namespace ProductAndOrder.Api.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	[Authorize(Roles = "Customer")]
+	
 	public class OrderController : ControllerBase
 	{
 		private readonly IOrderDto _orderDto;
@@ -16,13 +16,17 @@ namespace ProductAndOrder.Api.Controllers
 		{
 			_orderDto = orderDto;
 		}
+		
 		[HttpGet]
+		[Authorize(Roles = "Customer,Admin")]
 		public async Task<IActionResult> GetAllOrderAsync()
 		{
 			var orders = await _orderDto.GetAllOrderAsync();
 			return Ok(orders);
 		}
+	
 		[HttpGet("{id}")]
+		[Authorize(Roles = "Customer,Admin")]
 		public async Task<IActionResult> GetOrderByIdAsync(int id)
 		{
 			var order = await _orderDto.GetOrderByIdAsync(id);
@@ -30,13 +34,18 @@ namespace ProductAndOrder.Api.Controllers
 				return NotFound();
 			return Ok(order);
 		}
+	
+
 		[HttpPost]
-		public async Task<IActionResult> AddOrderAsync(CreateOrderDto createorder)
+		[Authorize(Roles = "Customer")]
+		public async Task<ExecutionResult<OrderDto>> AddOrderAsync(CreateOrderDto createorder)
 		{
 			var order = await _orderDto.AddOrderAsync(createorder);
-			return Ok(order);
+			return order;
 		}
+	
 		[HttpPut]
+		[Authorize(Roles = "Customer")]
 		public async Task<IActionResult> UpdateOrderAsync(UpdateOrderDto updateorder)
 		{
 			var result = await _orderDto.UpdateOrderAsync(updateorder);
@@ -44,7 +53,9 @@ namespace ProductAndOrder.Api.Controllers
 				return NotFound();
 			return Ok();
 		}
+		
 		[HttpDelete("{id}")]
+		[Authorize(Roles = "Customer")]
 		public async Task<IActionResult> DeleteOrderAsync(int id)
 		{
 			var result = await _orderDto.DeleteOrderAsync(id);

@@ -13,6 +13,7 @@ namespace ProductAndOrder.Infrastructure.Data
 		}
 	    public DbSet<product> Products { get; set; }
 		public DbSet<Order> Orders { get; set; }
+		public DbSet<ProductOrder> ProductOrders { get; set; }
 	}
 	}
 

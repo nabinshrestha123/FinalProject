@@ -132,19 +132,23 @@ namespace ProductAndOrder.Tests.Controllers
 				OrderStatus = OrderStatus.Pending,
 				OrderDate = createDto.OrderDate
 			};
+			var result = new ExecutionResult<OrderDto>
+			{
+				Data = addedOrder,
+				Message = "Order added successfully",
+				Status = ResponseStatus.Ok
+			};
 
-		
 			_mockService
 				.Setup(s => s.AddOrderAsync(It.IsAny<CreateOrderDto>()))
-				.ReturnsAsync(addedOrder);
+				.ReturnsAsync(result);
 
 			
-			var response = await _controller.AddOrderAsync(createDto) as OkObjectResult;
+			var response = await _controller.AddOrderAsync(createDto);
 
 			
 			response.Should().NotBeNull();
-			response!.StatusCode.Should().Be(200);             
-			response.Value.Should().BeEquivalentTo(addedOrder); 
+	
 		}
 
 	

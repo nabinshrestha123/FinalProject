@@ -13,13 +13,14 @@ namespace ProductAndOrder.Application.Services
 	{   private readonly IOrder _Order;
 		private readonly IUserServiceClient _UserServiceClient;
 		private readonly IKafkaProducer _KafkaProducr;
+		private readonly IProduct _product;
 		
 
-		public OrderService(IOrder order, IUserServiceClient UserServiceClient,IKafkaProducer kafkaProducer) { 
+		public OrderService(IOrder order, IUserServiceClient UserServiceClient,IKafkaProducer kafkaProducer, IProduct product) { 
 			_Order = order;
 			_UserServiceClient = UserServiceClient;
 			_KafkaProducr = kafkaProducer;
-			
+			_product = product;
 		}
 		public async Task<IEnumerable<OrderDto>> GetAllOrderAsync()
 		{
@@ -45,13 +46,6 @@ namespace ProductAndOrder.Application.Services
 					Status = ResponseStatus.BadRequest
 				};
 			var customerDetail = await _UserServiceClient.GetUserAsync(orders.UserId);
-			if (customerDetail == null)
-				return new ExecutionResult<OrderDto>()
-				{
-					Data = null,
-					Message = "Customer not found",
-					Status = ResponseStatus.BadRequest
-				};
 
 			var result = new OrderDto
 			{
@@ -59,7 +53,7 @@ namespace ProductAndOrder.Application.Services
 				OrderDate = orders.OrderDate,
 				OrderStatus = (Domain.Enum.OrderStatus)orders.OrderStatus,
 				TotalAmount = orders.TotalAmount,
-				CustomerName = customerDetail.Name
+				CustomerName = customerDetail == null ? "-" : customerDetail.Name,
 			};
 			return new ExecutionResult<OrderDto>()
 			{
@@ -69,8 +63,19 @@ namespace ProductAndOrder.Application.Services
 			};
 		}
 
-		public async Task<OrderDto> AddOrderAsync(CreateOrderDto createorder)
+		public async Task<ExecutionResult<OrderDto>> AddOrderAsync(CreateOrderDto createorder)
 		{
+			var isValidProduct = await _product.GetProductByIdAsync(createorder.ProductId);
+			if (isValidProduct == null)
+			{
+				return new ExecutionResult<OrderDto>()
+				{
+					Data = null,
+					Message = "ProductId not found",
+					Status = ResponseStatus.BadRequest
+				};
+			}
+
 			var order = new Order
 			{   
 				UserId = createorder.UserId,
@@ -79,6 +84,14 @@ namespace ProductAndOrder.Application.Services
 				TotalAmount = createorder.TotalAmount,
 			};
 			var createdOrder = await _Order.AddOrderAsync(order);
+
+			ProductOrder productAndOrder = new ProductOrder
+			{
+				OrderId = createdOrder.Id,
+				ProductId = createorder.ProductId,
+				Quantity = createorder.Quantity
+			};
+			var productOrder = await _Order.AddProductOrderAsync(productAndOrder);
 
 			var orderCreatedEvent = new OrderCreatedEvent
 			{
@@ -93,15 +106,18 @@ namespace ProductAndOrder.Application.Services
 				message: orderCreatedEvent
 				);
 			
-			return new OrderDto
+			return new ExecutionResult<OrderDto>()
 			{
-				Id = createdOrder.Id,
-				OrderDate = createdOrder.OrderDate,
-				OrderStatus = (Domain.Enum.OrderStatus)createdOrder.OrderStatus,
-				TotalAmount = createdOrder.TotalAmount,
-			};	
-
-
+				Data = new OrderDto
+				{
+					Id = createdOrder.Id,
+					OrderDate = createdOrder.OrderDate,
+					OrderStatus = (Domain.Enum.OrderStatus)createdOrder.OrderStatus,
+					TotalAmount = createdOrder.TotalAmount,
+				},
+				Message = "Order created successfully",
+				Status = ResponseStatus.Ok
+			};
 		}
 		public async Task<bool> DeleteOrderAsync(int id)
 		{
@@ -122,7 +138,6 @@ namespace ProductAndOrder.Application.Services
 			order.TotalAmount = updateorder.TotalAmount;
 
 			await _Order.UpdateOrderAsync(order);
-			//produce to user ms 
 
 			return true;
 

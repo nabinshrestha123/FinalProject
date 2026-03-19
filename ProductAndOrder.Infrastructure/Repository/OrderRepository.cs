@@ -39,5 +39,12 @@ namespace ProductAndOrder.Infrastructure.Repository
 			return true;
 
 		}
+
+		public async Task<bool> AddProductOrderAsync(ProductOrder productorder)
+		{
+			context.ProductOrders.Add(productorder);
+			var id = await context.SaveChangesAsync();
+			return id > 0;
+		}
 	}
 }

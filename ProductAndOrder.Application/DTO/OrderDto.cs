@@ -18,6 +18,8 @@ namespace ProductAndOrder.Application.DTO
 	public class CreateOrderDto
 	{
 		public int UserId { get; set; }
+		public int ProductId { get; set; }
+		public int Quantity { get; set; }
 		public int TotalAmount { get; set; }
 		public OrderStatus OrderStatus { get; set; }
 		public DateTime? OrderDate { get; set; }
