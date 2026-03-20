@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductAndOrder.Application.DTO;
@@ -38,9 +39,10 @@ namespace ProductAndOrder.Api.Controllers
 
 		[HttpPost]
 		[Authorize(Roles = "Customer")]
-		public async Task<ExecutionResult<OrderDto>> AddOrderAsync(CreateOrderDto createorder)
+		public async Task<ExecutionResult<int>> AddOrderAsync(CreateOrderDto createorder)
 		{
-			var order = await _orderDto.AddOrderAsync(createorder);
+			int actionBy = int.Parse(User.FindFirstValue("Id"));
+			var order = await _orderDto.AddOrderAsync(createorder,actionBy);
 			return order;
 		}
 	
@@ -49,9 +51,7 @@ namespace ProductAndOrder.Api.Controllers
 		public async Task<IActionResult> UpdateOrderAsync(UpdateOrderDto updateorder)
 		{
 			var result = await _orderDto.UpdateOrderAsync(updateorder);
-			if (!result)
-				return NotFound();
-			return Ok();
+			return Ok(result);
 		}
 		
 		[HttpDelete("{id}")]

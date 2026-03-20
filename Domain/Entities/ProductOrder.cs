@@ -22,4 +22,9 @@ namespace ProductAndOrder.Domain.Entities
 
 		public int Quantity { get; set; }
 	}
+	public class  UpdateProductOrder
+	{
+		public int Quantity { get; set; }
+
+	}
 }

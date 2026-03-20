@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
+using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Domain.Entities;
+using ProductAndOrder.Domain.Enum;
 using ProductAndOrder.Domain.Interfaces;
 using ProductAndOrder.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace ProductAndOrder.Infrastructure.Repository
 {
-	public class OrderRepository(AppDBContext context): IOrder {
+	public class OrderRepository(AppDBContext context) : IOrder
+	{
 		public async Task<IEnumerable<Order>> GetAllOrderAsync()
 		{
-			return await context.Orders.ToListAsync();	
-
+			var result = await context.Orders.ToListAsync();
+			return result;
 		}
+
 		public async Task<Order> GetOrderByIdAsync(int Id)
 		{
 			return await context.Orders.FirstOrDefaultAsync(o => o.Id == Id);
@@ -22,7 +26,7 @@ namespace ProductAndOrder.Infrastructure.Repository
 		public async Task<Order> AddOrderAsync(Order order)
 		{
 			context.Orders.Add(order);
-			await context.SaveChangesAsync();	
+			await context.SaveChangesAsync();
 			return order;
 		}
 		public async Task<bool> DeleteOrderAsync(Order order)
@@ -45,6 +49,30 @@ namespace ProductAndOrder.Infrastructure.Repository
 			context.ProductOrders.Add(productorder);
 			var id = await context.SaveChangesAsync();
 			return id > 0;
+		}
+
+		public async Task<bool> UpdateProductOrderAsync(ProductOrder productorders)
+		{
+			context.ProductOrders.Update(productorders);
+			await context.SaveChangesAsync();
+			return true;
+
+		}
+
+		public Task<ProductOrder> GetProductOrderByOrderIdAsync(int OrderId)
+		{
+			return context.ProductOrders.FirstOrDefaultAsync(po => po.OrderId == OrderId);
+
+
+
+
+		}
+
+		public Task<List<ProductOrder>> GetAllProductOrder()
+		{
+			var result= context.ProductOrders.ToListAsync();
+			return result;
+			
 		}
 	}
 }

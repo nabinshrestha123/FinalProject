@@ -9,13 +9,12 @@ namespace ProductAndOrder.Application.DTO
 		public int Id { get; set; }
 		public string? ProductName { get; set; }
 		public int? Price { get; set; }
-		public string? ActionByName { get; set; }
-		public string? ActionDate { get; set; }
+	
 
 
 	}
 	public class CreateProductDto
-	{   public int Id { get; set; }
+	{   
 		public string? ProductName { get; set; }
 		public int? Price { get; set; }
 

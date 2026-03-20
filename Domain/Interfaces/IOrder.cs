@@ -13,5 +13,9 @@ namespace ProductAndOrder.Domain.Interfaces
 		Task<bool> DeleteOrderAsync(Order order);
 		Task<bool> UpdateOrderAsync(Order order);
 		Task<bool> AddProductOrderAsync(ProductOrder productorder);
+		Task<bool> UpdateProductOrderAsync(ProductOrder productorder);
+		Task<ProductOrder> GetProductOrderByOrderIdAsync(int OrderId);
+		Task<List<ProductOrder>> GetAllProductOrder();
+
 	}
 }
