@@ -21,6 +21,9 @@ namespace ProductAndOrder.Domain.Entities
 		public product Product { get; set; }  // navigation property
 
 		public int Quantity { get; set; }
+		public decimal TotalPrice { get; set; }
+		public decimal UnitPrice { get; set; } = 0;
+		
 	}
 	public class  UpdateProductOrder
 	{

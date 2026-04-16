@@ -10,20 +10,26 @@ namespace ProductAndOrder.Application.DTO
 		public int Id { get; set; }
 		public DateTime? OrderDate { get; set; }
 		public OrderStatus OrderStatus { get; set; }
-        public int TotalAmount { get; set; }
+        public decimal TotalAmount { get; set; }
 		public int CustomerId { get; set; }
 		public int Quantity { get; set; }
 		public string CustomerName { get; set; }
 		public string ProductName { get; set; }
 		public string OrderStatusInfo { get; set; }
+		public decimal SubTotal { get; set; }
+		public decimal DiscountAmount { get; set; }
+		
+
 
 	}
 	public class CreateOrderDto
 	{
 		public int ProductId { get; set; }
 		public int Quantity { get; set; }
-		
-		
+		public DiscountType DiscountType { get; set; }
+		public decimal DiscountValue{ get; set; }
+
+
 	}
 	public class UpdateOrderDto
 	{

@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
@@ -9,15 +8,16 @@ namespace ProductAndOrder.Api.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	
 	public class OrderController : ControllerBase
 	{
 		private readonly IOrderDto _orderDto;
+
 		public OrderController(IOrderDto orderDto)
 		{
 			_orderDto = orderDto;
 		}
-		
+
+		// ✅ GET ALL ORDERS
 		[HttpGet]
 		[Authorize(Roles = "Customer,Admin")]
 		public async Task<IActionResult> GetAllOrderAsync()
@@ -25,27 +25,39 @@ namespace ProductAndOrder.Api.Controllers
 			var orders = await _orderDto.GetAllOrderAsync();
 			return Ok(orders);
 		}
-	
+
+		// ✅ GET ORDER BY ID
 		[HttpGet("{id}")]
 		[Authorize(Roles = "Customer,Admin")]
 		public async Task<IActionResult> GetOrderByIdAsync(int id)
 		{
-			var order = await _orderDto.GetOrderByIdAsync(id);
-			if (order == null)
-				return NotFound();
-			return Ok(order);
-		}
-	
+			var result = await _orderDto.GetOrderByIdAsync(id);
 
+			if (result == null || result.Data == null)
+				return NotFound(result);
+
+			return Ok(result);
+		}
+
+		// ✅ CREATE ORDER (FIXED)
 		[HttpPost]
 		[Authorize(Roles = "Customer")]
-		public async Task<ExecutionResult<int>> AddOrderAsync(CreateOrderDto createorder)
+		public async Task<IActionResult> AddOrderAsync(CreateOrderDto createorder)
 		{
-			int actionBy = int.Parse(User.FindFirstValue("Id"));
-			var order = await _orderDto.AddOrderAsync(createorder,actionBy);
-			return order;
+			// 🔐 Get User Id from JWT
+			var userIdClaim = User.FindFirst("Id");
+
+			if (userIdClaim == null)
+				return Unauthorized("User Id not found in token");
+
+			int actionBy = int.Parse(userIdClaim.Value);
+
+			var result = await _orderDto.AddOrderAsync(createorder, actionBy);
+
+			return Ok(result);
 		}
-	
+
+		// ✅ UPDATE ORDER
 		[HttpPut]
 		[Authorize(Roles = "Customer")]
 		public async Task<IActionResult> UpdateOrderAsync(UpdateOrderDto updateorder)
@@ -53,15 +65,18 @@ namespace ProductAndOrder.Api.Controllers
 			var result = await _orderDto.UpdateOrderAsync(updateorder);
 			return Ok(result);
 		}
-		
+
+		// ✅ DELETE ORDER
 		[HttpDelete("{id}")]
 		[Authorize(Roles = "Customer")]
 		public async Task<IActionResult> DeleteOrderAsync(int id)
 		{
 			var result = await _orderDto.DeleteOrderAsync(id);
+
 			if (!result)
-				return NotFound();
-			return Ok();
+				return NotFound("Order not found");
+
+			return Ok("Order deleted successfully");
 		}
 	}
 }

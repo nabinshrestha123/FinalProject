@@ -1,9 +1,12 @@
-﻿using NPOI.OpenXmlFormats.Wordprocessing;
+﻿// ❌ REMOVED this (not needed)
+// using NPOI.OpenXmlFormats.Wordprocessing;
+
 using ProductAndOrder.Application.DTO;
 using ProductAndOrder.Application.Interfaces;
 using ProductAndOrder.Application.Kafka.KafkaEntities;
 using ProductAndOrder.Application.Kafka.Producer.ProducerInterface;
 using ProductAndOrder.Application.Kafka.Topic;
+using ProductAndOrder.Application.Services.Strategy_pattern;
 using ProductAndOrder.Domain.Entities;
 using ProductAndOrder.Domain.Enum;
 using ProductAndOrder.Domain.Interfaces;
@@ -16,206 +19,236 @@ namespace ProductAndOrder.Application.Services
 		private readonly IUserServiceClient _UserServiceClient;
 		private readonly IKafkaProducer _KafkaProducr;
 		private readonly IProduct _product;
-		
+		private readonly DiscountStrategyFactory _discountStrategyFactory;
 
-
-		public OrderService(IOrder order, IUserServiceClient UserServiceClient, IKafkaProducer kafkaProducer, IProduct product)
+		public OrderService(
+			IOrder order,
+			IUserServiceClient UserServiceClient,
+			IKafkaProducer kafkaProducer,
+			IProduct product,
+			DiscountStrategyFactory discountStrategyFactory)
 		{
 			_Order = order;
 			_UserServiceClient = UserServiceClient;
 			_KafkaProducr = kafkaProducer;
 			_product = product;
+			_discountStrategyFactory = discountStrategyFactory;
 		}
+
+		// ================= GET ALL =================
 		public async Task<IEnumerable<OrderDto>> GetAllOrderAsync()
 		{
 			var orders = await _Order.GetAllOrderAsync();
 			var products = await _product.GetAllProductsAsync();
 			var productOrders = await _Order.GetAllProductOrder();
-			var productOrder =
+
+			var result =
 			(from o in orders
 			 join po in productOrders on o.Id equals po.OrderId
 			 join p in products on po.ProductId equals p.Id
 			 select new OrderDto
 			 {
 				 Id = o.Id,
-				 ProductName=p.ProductName,
+				 ProductName = p.ProductName,
 				 OrderDate = o.OrderDate,
 				 OrderStatus = (OrderStatus)o.OrderStatus,
 				 TotalAmount = o.TotalAmount,
 				 Quantity = po.Quantity,
-				 OrderStatusInfo = ((OrderStatus)o.OrderStatus).ToString()
-
-
+				 OrderStatusInfo = ((OrderStatus)o.OrderStatus).ToString(),
+				 SubTotal = o.SubTotal,              // ✅ ADDED
+				 DiscountAmount = o.DiscountAmount   // ✅ ADDED
 			 }).ToList();
-			return productOrder;
 
+			return result;
 		}
+
+		// ================= GET BY ID =================
 		public async Task<ExecutionResult<OrderDto>> GetOrderByIdAsync(int orderId)
 		{
-			var orders = await _Order.GetOrderByIdAsync(orderId);
-			if (orders == null)
-				return new ExecutionResult<OrderDto>()
+			var order = await _Order.GetOrderByIdAsync(orderId);
+
+			if (order == null)
+			{
+				return new ExecutionResult<OrderDto>
 				{
 					Data = null,
 					Message = "OrderId not found",
 					Status = ResponseStatus.BadRequest
 				};
+			}
+
 			var productOrder = await _Order.GetProductOrderByOrderIdAsync(orderId);
-			if (productOrder == null)
-				return new ExecutionResult<OrderDto>()
-				{
-					Data = null,
-					Message = "Product id not found",
-					Status = ResponseStatus.BadRequest
-				};
-
-			var productDetail = await _product.GetProductByIdAsync(productOrder.ProductId);
-			if (productDetail == null)
-				return new ExecutionResult<OrderDto>()
-				{
-					Data = null,
-					Message = "Product not found",
-					Status = ResponseStatus.BadRequest
-				};
-
-			var customerDetail = await _UserServiceClient.GetUserAsync(orders.UserId);
+			var product = await _product.GetProductByIdAsync(productOrder.ProductId);
+			var user = await _UserServiceClient.GetUserAsync(order.UserId);
 
 			var result = new OrderDto
 			{
-				Id = orders.Id,
-				OrderDate = orders.OrderDate,
-				OrderStatus = (Domain.Enum.OrderStatus)orders.OrderStatus,
-				TotalAmount = orders.TotalAmount,
-				CustomerName = customerDetail == null ? "-" : customerDetail.Name,
-				ProductName= productDetail.ProductName,
-				OrderStatusInfo = ((OrderStatus)orders.OrderStatus).ToString()
+				Id = order.Id,
+				OrderDate = order.OrderDate,
+				OrderStatus = (OrderStatus)order.OrderStatus,
+				TotalAmount = order.TotalAmount,
+				CustomerName = user?.Name ?? "-",
+				ProductName = product?.ProductName,
+				OrderStatusInfo = ((OrderStatus)order.OrderStatus).ToString(),
+				SubTotal = order.SubTotal,            // ✅ ADDED
+				DiscountAmount = order.DiscountAmount // ✅ ADDED
 			};
-			return new ExecutionResult<OrderDto>()
+
+			return new ExecutionResult<OrderDto>
 			{
 				Data = result,
-				Message = "OrderId found",
+				Message = "Order found",
 				Status = ResponseStatus.Ok
 			};
 		}
 
-		public async Task<ExecutionResult<int>> AddOrderAsync(CreateOrderDto createorder,int actionBy)
+		// ================= ADD ORDER =================
+		public async Task<ExecutionResult<int>> AddOrderAsync(CreateOrderDto createorder, int actionBy)
 		{
-			var isValidProduct = await _product.GetProductByIdAsync(createorder.ProductId);
-			if (isValidProduct == null)
+			var product = await _product.GetProductByIdAsync(createorder.ProductId);
+
+			if (product == null)
 			{
-				return new ExecutionResult<int>()
+				return new ExecutionResult<int>
 				{
 					Data = 0,
-					Message = "ProductId not found",
+					Message = "Product not found",
 					Status = ResponseStatus.BadRequest
 				};
 			}
 
+			// ✅ FIXED NULL ISSUE
+			decimal subTotal = (product.Price ?? 0) * createorder.Quantity;
+
+			// ✅ STRATEGY PATTERN USED
+			var strategy = _discountStrategyFactory.GetStrategy(
+				createorder.DiscountType,
+				createorder.DiscountValue
+			);
+
+			
+
+			decimal finalTotal = strategy.ApplyDiscount(subTotal);
+
+			if (finalTotal < 0)
+				finalTotal = 0;
+			decimal discountAmount = subTotal - finalTotal;
+
 			var order = new Order
 			{
 				UserId = actionBy,
-				OrderDate = DateTime.UtcNow,
+				DiscountType = createorder.DiscountType.ToString(),
+				SubTotal = subTotal,
+				DiscountAmount = discountAmount,
+				TotalAmount = finalTotal,
 				OrderStatus = (int)OrderStatus.Pending,
-				TotalAmount = createorder.Quantity * isValidProduct.Price ?? 0
-
+				OrderDate = DateTime.UtcNow
 			};
+
 			var createdOrder = await _Order.AddOrderAsync(order);
 
-			ProductOrder productAndOrder = new ProductOrder
+			var productOrder = new ProductOrder
 			{
 				OrderId = createdOrder.Id,
 				ProductId = createorder.ProductId,
-				Quantity = createorder.Quantity
+				Quantity = createorder.Quantity,
+				UnitPrice = product.Price ?? 0,
+				TotalPrice = subTotal
 			};
-			var productOrder = await _Order.AddProductOrderAsync(productAndOrder);
 
+			await _Order.AddProductOrderAsync(productOrder);
+
+			// ✅ OPTIONAL Kafka
 			var orderCreatedEvent = new OrderCreatedEvent
 			{
-				Message = $"Order with ID {createdOrder.Id} has been created with status {createdOrder.OrderStatus}.",
+				Message = $"Order {createdOrder.Id} created",
 				UserId = actionBy
-
 			};
 
 			await _KafkaProducr.ProducerAsync(
-				topic: KafkaTopics.OrderCreated,
-				key: order.UserId.ToString(),
-				message: orderCreatedEvent
-				);
+				KafkaTopics.OrderCreated,
+				createdOrder.UserId.ToString(),
+				orderCreatedEvent
+			);
 
-			return new ExecutionResult<int>()
+			return new ExecutionResult<int>
 			{
 				Data = createdOrder.Id,
 				Message = "Order created successfully",
 				Status = ResponseStatus.Ok
 			};
 		}
+
+		// ================= DELETE =================
 		public async Task<bool> DeleteOrderAsync(int id)
 		{
-			var dltorder = await _Order.GetOrderByIdAsync(id);
-			if (dltorder == null)
-				return false;
-			await _Order.DeleteOrderAsync(dltorder);
-			return true;
+			var order = await _Order.GetOrderByIdAsync(id);
 
+			if (order == null)
+				return false;
+
+			await _Order.DeleteOrderAsync(order);
+			return true;
 		}
+
+		// ================= UPDATE =================
 		public async Task<ExecutionResult<bool>> UpdateOrderAsync(UpdateOrderDto request)
 		{
-			Order order = await _Order.GetOrderByIdAsync(request.Id);
+			var order = await _Order.GetOrderByIdAsync(request.Id);
+
 			if (order == null)
 			{
-				return new ExecutionResult<bool>()
+				return new ExecutionResult<bool>
 				{
 					Data = false,
-					Message = "OrderId not found",
+					Message = "Order not found",
 					Status = ResponseStatus.BadRequest
 				};
 			}
 
-			ProductOrder productOrder = await _Order.GetProductOrderByOrderIdAsync(order.Id);
-			//error handling for product order
+			var productOrder = await _Order.GetProductOrderByOrderIdAsync(order.Id);
 
 			if (productOrder == null)
 			{
-				return new ExecutionResult<bool>()
+				return new ExecutionResult<bool>
 				{
 					Data = false,
-					Message = "ProductOrder not found for the given OrderId",
+					Message = "ProductOrder not found",
 					Status = ResponseStatus.BadRequest
 				};
 			}
+
+			var product = await _product.GetProductByIdAsync(productOrder.ProductId);
+
+			if (product == null)
+			{
+				return new ExecutionResult<bool>
+				{
+					Data = false,
+					Message = "Product not found",
+					Status = ResponseStatus.BadRequest
+				};
+			}
+
 			productOrder.Quantity = request.Quantity;
 
-			product productDetail = await _product.GetProductByIdAsync(productOrder.ProductId);
-			//error handling for product
-			if (productDetail == null)
-			{
-				return new ExecutionResult<bool>()
-				{
-					Data = false,
-					Message = "Product not found for the given ProductId",
-					Status = ResponseStatus.BadRequest
-				};
-			}
+			// ✅ FIXED CALCULATION BUG
+			order.TotalAmount = (product.Price ?? 0) * productOrder.Quantity;
+
 			order.OrderDate = DateTime.UtcNow;
+
 			if (request.OrderStatus == OrderStatus.Canceled)
-			{
-				order.OrderStatus = (int)(OrderStatus)request.OrderStatus;
-			}
-			order.TotalAmount = productDetail?.Price ?? 0 * productOrder.Quantity;
+				order.OrderStatus = (int)request.OrderStatus;
 
 			await _Order.UpdateOrderAsync(order);
-
 			await _Order.UpdateProductOrderAsync(productOrder);
-			return new ExecutionResult<bool>()
+
+			return new ExecutionResult<bool>
 			{
 				Data = true,
-				Message = "UpdateSuccessful",
+				Message = "Updated successfully",
 				Status = ResponseStatus.Ok
 			};
-
-
-
 		}
-
 	}
 }

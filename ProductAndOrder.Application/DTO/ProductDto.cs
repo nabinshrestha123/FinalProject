@@ -8,7 +8,7 @@ namespace ProductAndOrder.Application.DTO
 	{
 		public int Id { get; set; }
 		public string? ProductName { get; set; }
-		public int? Price { get; set; }
+		public decimal? Price { get; set; }
 	
 
 
@@ -16,7 +16,7 @@ namespace ProductAndOrder.Application.DTO
 	public class CreateProductDto
 	{   
 		public string? ProductName { get; set; }
-		public int? Price { get; set; }
+		public decimal? Price { get; set; }
 
 		
 

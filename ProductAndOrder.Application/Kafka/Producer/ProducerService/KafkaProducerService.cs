@@ -24,17 +24,21 @@ public class KafkaProducerService : IKafkaProducer, IDisposable
 			var producerConfig = new ProducerConfig
 			{
 				BootstrapServers = config["Kafka:BootstrapServers"],
-				ClientId = config["Kafka:ProducerId"],
+				ClientId = config["Kafka:ProducerClientId"],
 				Acks = Acks.All,
 				EnableIdempotence = true,
 				MessageSendMaxRetries = 3,
 				RetryBackoffMs = 1000,
 
 
+
 				SecurityProtocol = SecurityProtocol.SaslSsl,
 				SaslMechanism = SaslMechanism.Plain,
 				SaslUsername = config["Kafka:ApiKey"],
-				SaslPassword = config["Kafka:ApiSecret"]
+				SaslPassword = config["Kafka:ApiSecret"],
+				SocketTimeoutMs = 10000,
+				MessageTimeoutMs = 10000
+
 			};
 			_producer = new ProducerBuilder<string, string>(producerConfig).Build();
 
@@ -60,7 +64,7 @@ public class KafkaProducerService : IKafkaProducer, IDisposable
 			catch(ProduceException<string,string> ex)
 			{
 				_logger.LogError(ex, "Failed to produce message To topic {Topic}", topic);
-				throw;
+			
 			}
 			
 		}
